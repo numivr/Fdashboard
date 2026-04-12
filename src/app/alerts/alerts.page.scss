@@ -1,0 +1,13 @@
+.center { display: flex; justify-content: center; padding: 32px; }
+
+ion-item.unread {
+  --background: rgba(var(--ion-color-primary-rgb), 0.06);
+  font-weight: 500;
+}
+
+.alert-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
