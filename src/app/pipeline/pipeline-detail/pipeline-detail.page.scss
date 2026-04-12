@@ -1,0 +1,16 @@
+.center { display: flex; justify-content: center; padding: 32px; }
+
+.summary-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.summary-item { display: flex; flex-direction: column; gap: 2px; min-width: 90px; }
+.s-label { font-size: 0.7rem; color: var(--ion-color-medium); text-transform: uppercase; }
+.s-val   { font-size: 1rem; font-weight: 600; }
+.score { &.good { color: var(--ion-color-success); } &.bad { color: var(--ion-color-danger); } }
+.detail { font-style: italic; color: var(--ion-color-medium); font-size: 0.8rem; }

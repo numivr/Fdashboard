@@ -1,0 +1,75 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/app/pipeline"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalle Pipeline</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  @if (loading()) {
+    <div class="center"><ion-spinner></ion-spinner></div>
+  } @else if (error()) {
+    <ion-note color="danger">{{ error() }}</ion-note>
+  } @else if (run()) {
+
+    <div class="summary-box">
+      <div class="summary-item">
+        <span class="s-label">Proyecto</span>
+        <span class="s-val">{{ run()!.project_name }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="s-label">Commit</span>
+        <span class="s-val">{{ run()!.commit_ref ?? '—' }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="s-label">Resultado</span>
+        <ion-badge [color]="resultColor(run()!.result)">{{ run()!.result }}</ion-badge>
+      </div>
+      <div class="summary-item">
+        <span class="s-label">Score</span>
+        <span class="s-val score"
+          [class.good]="run()!.result === 'SECURE'"
+          [class.bad]="run()!.result === 'UNSAFE'">
+          {{ run()!.score ?? '—' }}/100
+        </span>
+      </div>
+    </div>
+
+    <ion-accordion-group>
+      @for (group of groups(); track group.category) {
+        <ion-accordion [value]="group.category">
+          <ion-item slot="header" color="light">
+            <ion-label>
+              <strong>{{ group.category }}</strong>
+              <p>{{ group.passed }}/{{ group.checks.length }} pasados</p>
+            </ion-label>
+            <ion-badge slot="end" [color]="group.passed === group.checks.length ? 'success' : 'danger'">
+              {{ group.passed }}/{{ group.checks.length }}
+            </ion-badge>
+          </ion-item>
+
+          <ion-list slot="content" lines="inset">
+            @for (check of group.checks; track check.id) {
+              <ion-item>
+                <ion-icon
+                  slot="start"
+                  [name]="check.passed ? 'checkmark-circle-outline' : 'close-circle-outline'"
+                  [color]="check.passed ? 'success' : 'danger'">
+                </ion-icon>
+                <ion-label>
+                  <h3>{{ check.check_name }}</h3>
+                  @if (check.detail) { <p class="detail">{{ check.detail }}</p> }
+                </ion-label>
+                <ion-badge slot="end" [color]="severityColor(check.severity)">{{ check.severity }}</ion-badge>
+              </ion-item>
+            }
+          </ion-list>
+        </ion-accordion>
+      }
+    </ion-accordion-group>
+
+  }
+</ion-content>
