@@ -1,0 +1,157 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ion-padding">
+
+    @if (loading() && !stats()) {
+      <div class="center"><ion-spinner></ion-spinner></div>
+    } @else if (error()) {
+      <ion-note color="danger">{{ error() }}</ion-note>
+    } @else if (stats()) {
+
+      <!-- ── Resumen general ─────────────────────────────────── -->
+      <ion-grid>
+        <ion-row>
+          <ion-col size="6" size-md="3">
+            <div class="stat-card">
+              <ion-icon name="server-outline" color="primary"></ion-icon>
+              <span class="stat-val">{{ stats()!.total_assets }}</span>
+              <span class="stat-lbl">Assets totales</span>
+            </div>
+          </ion-col>
+          <ion-col size="6" size-md="3">
+            <div class="stat-card success">
+              <ion-icon name="server-outline" color="success"></ion-icon>
+              <span class="stat-val">{{ stats()!.online_assets }}</span>
+              <span class="stat-lbl">Online</span>
+            </div>
+          </ion-col>
+          <ion-col size="6" size-md="3">
+            <div class="stat-card danger">
+              <ion-icon name="warning-outline" color="danger"></ion-icon>
+              <span class="stat-val">{{ stats()!.open_incidents }}</span>
+              <span class="stat-lbl">Incidentes abiertos</span>
+            </div>
+          </ion-col>
+          <ion-col size="6" size-md="3">
+            <div class="stat-card warning">
+              <ion-icon name="notifications-outline" color="warning"></ion-icon>
+              <span class="stat-val">{{ stats()!.unread_alerts }}</span>
+              <span class="stat-lbl">Alertas sin leer</span>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <!-- ── Pilares ──────────────────────────────────────────── -->
+      <ion-grid>
+        <ion-row>
+          <!-- Pilar 1: Bastionado -->
+          <ion-col size="12" size-md="4">
+            <ion-card [routerLink]="'/app/audit'">
+              <ion-card-header>
+                <ion-card-title>
+                  <ion-icon name="shield-checkmark-outline"></ion-icon>
+                  Bastionado
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <div class="pillar-score">
+                  @if (stats()!.last_audit_score !== null) {
+                    <span class="big-score" [class.score-good]="stats()!.last_audit_score! >= 70" [class.score-bad]="stats()!.last_audit_score! < 70">
+                      {{ stats()!.last_audit_score }}
+                    </span>
+                    <span class="score-label">/ 100</span>
+                  } @else {
+                    <span class="no-data">Sin datos</span>
+                  }
+                </div>
+                <p class="pillar-desc">Último score de auditoría SSH</p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <!-- Pilar 2: Pipeline -->
+          <ion-col size="12" size-md="4">
+            <ion-card [routerLink]="'/app/pipeline'">
+              <ion-card-header>
+                <ion-card-title>
+                  <ion-icon name="git-branch-outline"></ion-icon>
+                  Pipeline CI/CD
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <div class="pillar-score">
+                  <ion-badge [color]="pipelineColor(stats()!.last_pipeline_result)" class="pipeline-badge">
+                    {{ stats()!.last_pipeline_result ?? 'N/A' }}
+                  </ion-badge>
+                </div>
+                <p class="pillar-desc">
+                  ✅ {{ stats()!.secure_pipelines }} seguros &nbsp;
+                  ❌ {{ stats()!.unsafe_pipelines }} inseguros
+                </p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <!-- Pilar 3: Incidentes -->
+          <ion-col size="12" size-md="4">
+            <ion-card [routerLink]="'/app/incidents'">
+              <ion-card-header>
+                <ion-card-title>
+                  <ion-icon name="warning-outline"></ion-icon>
+                  Incidentes
+                </ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <div class="pillar-score">
+                  <span class="big-score" [class.score-bad]="stats()!.open_incidents > 0" [class.score-good]="stats()!.open_incidents === 0">
+                    {{ stats()!.open_incidents }}
+                  </span>
+                </div>
+                <p class="pillar-desc">Incidentes abiertos</p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <!-- ── Alertas en tiempo real ───────────────────────────── -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="trending-up-outline"></ion-icon>
+            Alertas en tiempo real
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          @if (liveAlerts().length === 0) {
+            <ion-note>Esperando eventos del WebSocket...</ion-note>
+          } @else {
+            <ion-list lines="inset">
+              @for (a of liveAlerts(); track $index) {
+                <ion-item>
+                  <ion-label>
+                    <p class="live-msg">{{ a.title }}</p>
+                    <p><small>{{ a.time }}</small></p>
+                  </ion-label>
+                  <ion-badge slot="end" [color]="severityColor(a.severity)">{{ a.severity }}</ion-badge>
+                </ion-item>
+              }
+            </ion-list>
+          }
+        </ion-card-content>
+      </ion-card>
+
+    }
+  </div>
+</ion-content>
