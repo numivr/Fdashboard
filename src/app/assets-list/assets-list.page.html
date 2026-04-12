@@ -1,0 +1,83 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Assets</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- ── Formulario nuevo asset ──────────────────────────────── -->
+  @if (showForm()) {
+    <ion-card class="ion-margin">
+      <ion-card-header>
+        <ion-card-title>Nuevo Asset</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="floating">Nombre *</ion-label>
+          <ion-input [(ngModel)]="form.name" type="text"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">IP Address</ion-label>
+          <ion-input [(ngModel)]="form.ip_address" type="text" placeholder="192.168.1.10"></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="floating">Sistema Operativo</ion-label>
+          <ion-input [(ngModel)]="form.os_type" type="text" placeholder="Ubuntu 22.04"></ion-input>
+        </ion-item>
+        <div class="form-actions">
+          <ion-button fill="outline" (click)="toggleForm()">
+            <ion-icon name="close-outline" slot="start"></ion-icon>Cancelar
+          </ion-button>
+          <ion-button (click)="saveAsset()" [disabled]="saving()">
+            @if (saving()) { <ion-spinner name="crescent" slot="start"></ion-spinner> }
+            @else { <ion-icon name="checkmark-outline" slot="start"></ion-icon> }
+            Guardar
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  <!-- ── Lista ───────────────────────────────────────────────── -->
+  <div class="ion-padding-horizontal ion-padding-top">
+    @if (loading() && assets().length === 0) {
+      <div class="center"><ion-spinner></ion-spinner></div>
+    } @else if (error()) {
+      <ion-note color="danger">{{ error() }}</ion-note>
+    } @else if (assets().length === 0) {
+      <ion-note>No hay assets. Pulsa + para añadir uno.</ion-note>
+    } @else {
+      <ion-list>
+        @for (asset of assets(); track asset.id) {
+          <ion-item-sliding>
+            <ion-item>
+              <ion-label>
+                <h2>{{ asset.name }}</h2>
+                <p>{{ asset.ip_address ?? '—' }} · {{ asset.os_type ?? 'OS desconocido' }}</p>
+                <p>Actualizado: {{ asset.updated_at | slice:0:10 }}</p>
+              </ion-label>
+              <ion-badge slot="end" [color]="statusColor(asset.status)">{{ asset.status }}</ion-badge>
+            </ion-item>
+            <ion-item-options side="end">
+              <ion-item-option color="danger" (click)="deleteAsset(asset)">
+                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        }
+      </ion-list>
+    }
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="toggleForm()">
+      <ion-icon [name]="showForm() ? 'close-outline' : 'add-outline'"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+</ion-content>
