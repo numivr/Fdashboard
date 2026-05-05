@@ -1,0 +1,31 @@
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  margin-bottom: 8px;
+}
+
+.user-avatar {
+  font-size: 2.4rem;
+  color: var(--ion-color-primary);
+  flex-shrink: 0;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  strong { font-size: 0.95rem; }
+}
+
+.nav-list {
+  padding: 0 8px;
+}
+
+ion-item.active-item {
+  --background: rgba(var(--ion-color-primary-rgb), 0.12);
+  --color: var(--ion-color-primary);
+  border-radius: 8px;
+  ion-icon { color: var(--ion-color-primary); }
+}

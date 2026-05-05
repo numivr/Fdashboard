@@ -1,0 +1,82 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Bastionado</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- ── Formulario trigger ──────────────────────────────────── -->
+  @if (showTrigger()) {
+    <ion-card class="ion-margin">
+      <ion-card-header>
+        <ion-card-title>Lanzar Auditoría</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label>Asset objetivo</ion-label>
+          <ion-select [(ngModel)]="selectedAssetId" placeholder="Selecciona asset" interface="popover">
+            @for (a of assets(); track a.id) {
+              <ion-select-option [value]="a.id">{{ a.name }} ({{ a.ip_address ?? 'sin IP' }})</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+        <div class="form-actions">
+          <ion-button fill="outline" (click)="showTrigger.set(false)">
+            <ion-icon name="close-outline" slot="start"></ion-icon>Cancelar
+          </ion-button>
+          <ion-button (click)="triggerAudit()" [disabled]="!selectedAssetId || triggering()">
+            @if (triggering()) { <ion-spinner name="crescent" slot="start"></ion-spinner> }
+            @else { <ion-icon name="play-outline" slot="start"></ion-icon> }
+            Auditar
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  <!-- ── Lista de runs ───────────────────────────────────────── -->
+  <div class="ion-padding-horizontal ion-padding-top">
+    @if (loading() && runs().length === 0) {
+      <div class="center"><ion-spinner></ion-spinner></div>
+    } @else if (error()) {
+      <ion-note color="danger">{{ error() }}</ion-note>
+    } @else if (runs().length === 0) {
+      <ion-note>No hay auditorías. Pulsa ▶ para lanzar una.</ion-note>
+    } @else {
+      <ion-list>
+        @for (run of runs(); track run.id) {
+          <ion-item [routerLink]="['/app/audit', run.id]" button detail="true">
+            <ion-label>
+              <h2>{{ run.asset_name }}</h2>
+              <p>{{ run.started_at | slice:0:16 }} · {{ run.total_checks }} checks ({{ run.passed_checks }} OK)</p>
+              <ion-progress-bar
+                [value]="run.score !== null ? run.score / 100 : 0"
+                [color]="scoreColor(run.score)"
+                class="score-bar">
+              </ion-progress-bar>
+            </ion-label>
+            <div slot="end" class="run-end">
+              <ion-badge [color]="statusColor(run.status)">{{ run.status }}</ion-badge>
+              @if (run.score !== null) {
+                <span class="score-text" [class.good]="run.score >= 70" [class.bad]="run.score < 70">
+                  {{ run.score }}/100
+                </span>
+              }
+            </div>
+          </ion-item>
+        }
+      </ion-list>
+    }
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="openTrigger()">
+      <ion-icon name="play-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Incidentes</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [value]="filter()" (ionChange)="onFilterChange($event)">
+      <ion-segment-button value="open"><ion-label>Abiertos</ion-label></ion-segment-button>
+      <ion-segment-button value="acknowledged"><ion-label>Reconocidos</ion-label></ion-segment-button>
+      <ion-segment-button value="resolved"><ion-label>Resueltos</ion-label></ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ion-padding-horizontal ion-padding-top">
+    @if (loading()) {
+      <div class="center"><ion-spinner></ion-spinner></div>
+    } @else if (error()) {
+      <ion-note color="danger">{{ error() }}</ion-note>
+    } @else if (incidents().length === 0) {
+      <ion-note>No hay incidentes {{ filter() === 'open' ? 'abiertos' : filter() }}.</ion-note>
+    } @else {
+      <ion-list>
+        @for (inc of incidents(); track inc.id) {
+          <ion-item>
+            <ion-label>
+              <h2>{{ inc.title }}</h2>
+              <p>Tipo: {{ inc.type }} · {{ inc.detected_at | slice:0:16 }}</p>
+              @if (inc.description) { <p class="desc">{{ inc.description }}</p> }
+            </ion-label>
+            <div slot="end" class="inc-end">
+              <ion-badge [color]="severityColor(inc.severity)">{{ inc.severity }}</ion-badge>
+              <ion-badge [color]="statusColor(inc.status)">{{ inc.status }}</ion-badge>
+              @if (inc.status === 'open') {
+                <ion-button size="small" fill="outline" color="primary" (click)="acknowledge(inc)">
+                  <ion-icon name="checkmark-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              }
+              @if (inc.status !== 'resolved') {
+                <ion-button size="small" fill="outline" color="success" (click)="resolve(inc)">
+                  <ion-icon name="checkmark-done-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              }
+            </div>
+          </ion-item>
+        }
+      </ion-list>
+    }
+  </div>
+</ion-content>

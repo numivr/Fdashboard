@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button></ion-menu-button></ion-buttons>
+    <ion-title>Alertas</ion-title>
+    @if (unreadCount > 0) {
+      <ion-buttons slot="end">
+        <ion-button fill="clear" color="light" (click)="markAllRead()">
+          <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+          Leer todas
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="ion-padding-horizontal ion-padding-top">
+    @if (loading()) {
+      <div class="center"><ion-spinner></ion-spinner></div>
+    } @else if (error()) {
+      <ion-note color="danger">{{ error() }}</ion-note>
+    } @else if (alerts().length === 0) {
+      <ion-note>No hay alertas.</ion-note>
+    } @else {
+      <ion-list>
+        @for (alert of alerts(); track alert.id) {
+          <ion-item-sliding>
+            <ion-item [class.unread]="!alert.is_read">
+              <ion-label>
+                <h2>{{ alert.title }}</h2>
+                <p>{{ alert.created_at | date:'short' }}</p>
+              </ion-label>
+              <div slot="end" class="alert-end">
+                <ion-badge [color]="severityColor(alert.severity)">{{ alert.severity }}</ion-badge>
+                @if (!alert.is_read) {
+                  <ion-badge color="primary">NEW</ion-badge>
+                }
+              </div>
+            </ion-item>
+
+            @if (!alert.is_read) {
+              <ion-item-options side="end">
+                <ion-item-option color="primary" (click)="markRead(alert)">
+                  <ion-icon name="mail-open-outline" slot="icon-only"></ion-icon>
+                </ion-item-option>
+              </ion-item-options>
+            }
+          </ion-item-sliding>
+        }
+      </ion-list>
+    }
+  </div>
+</ion-content>
