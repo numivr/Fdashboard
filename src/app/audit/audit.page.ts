@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -15,6 +16,7 @@ import { addIcons } from 'ionicons';
 import { playOutline, closeOutline } from 'ionicons/icons';
 import { AuditService } from '../core/services/audit.service';
 import { AssetsService } from '../core/services/assets.service';
+import { WebsocketService } from '../core/services/websocket.service';
 import { AuditRunSummary, AssetOut } from '../core/models/models';
 
 @Component({
@@ -30,10 +32,11 @@ import { AuditRunSummary, AssetOut } from '../core/models/models';
     IonSelect, IonSelectOption, IonButton, IonProgressBar,
   ],
 })
-export class AuditPage implements OnInit {
+export class AuditPage implements OnInit, OnDestroy {
   private auditSvc = inject(AuditService);
   private assetsSvc = inject(AssetsService);
   private toastCtrl = inject(ToastController);
+  private ws = inject(WebsocketService);
 
   runs = signal<AuditRunSummary[]>([]);
   assets = signal<AssetOut[]>([]);
@@ -43,9 +46,16 @@ export class AuditPage implements OnInit {
   selectedAssetId: number | null = null;
   triggering = signal(false);
 
+  private wsSub?: Subscription;
+
   constructor() { addIcons({ playOutline, closeOutline }); }
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    this.wsSub = this.ws.auditUpdates$.subscribe(() => this.load());
+  }
+
+  ngOnDestroy() { this.wsSub?.unsubscribe(); }
 
   load(event?: any) {
     this.loading.set(true);
@@ -70,7 +80,7 @@ export class AuditPage implements OnInit {
         this.showTrigger.set(false);
         const t = await this.toastCtrl.create({ message: 'Auditoría iniciada', duration: 2000, color: 'success' });
         await t.present();
-        setTimeout(() => this.load(), 2000);
+        this.load();
       },
       error: async (e) => {
         this.triggering.set(false);

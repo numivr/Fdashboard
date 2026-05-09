@@ -1,14 +1,16 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { WsAlertMessage } from '../models/models';
+import { WsAlertMessage, WsAuditMessage } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
 export class WebsocketService implements OnDestroy {
   private socket: WebSocket | null = null;
-  private readonly messages$ = new Subject<WsAlertMessage>();
+  private readonly alertMessages$ = new Subject<WsAlertMessage>();
+  private readonly auditMessages$ = new Subject<WsAuditMessage>();
 
-  readonly alerts$ = this.messages$.asObservable();
+  readonly alerts$ = this.alertMessages$.asObservable();
+  readonly auditUpdates$ = this.auditMessages$.asObservable();
 
   connect(token: string) {
     if (this.socket) return;
@@ -18,8 +20,12 @@ export class WebsocketService implements OnDestroy {
 
     this.socket.onmessage = (event) => {
       try {
-        const data: WsAlertMessage = JSON.parse(event.data);
-        this.messages$.next(data);
+        const data = JSON.parse(event.data);
+        if (data.type === 'alert') {
+          this.alertMessages$.next(data as WsAlertMessage);
+        } else if (data.type === 'audit_complete') {
+          this.auditMessages$.next(data as WsAuditMessage);
+        }
       } catch {
         // ignore malformed messages
       }

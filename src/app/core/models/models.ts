@@ -167,3 +167,15 @@ export interface WsAlertMessage {
   type: 'alert';
   alert: AlertOut;
 }
+
+export interface WsAuditMessage {
+  type: 'audit_complete';
+  run: {
+    id: number;
+    asset_name: string;
+    score: number | null;
+    status: string;
+  };
+}
+
+export type WsMessage = WsAlertMessage | WsAuditMessage;

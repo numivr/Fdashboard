@@ -41,6 +41,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   error = signal('');
 
   private wsSub?: Subscription;
+  private auditSub?: Subscription;
 
   constructor() {
     addIcons({ serverOutline, shieldCheckmarkOutline, gitBranchOutline, warningOutline, notificationsOutline, trendingUpOutline });
@@ -53,7 +54,9 @@ export class DashboardPage implements OnInit, OnDestroy {
         { time: new Date().toLocaleTimeString(), title: msg.alert.title, severity: msg.alert.severity },
         ...prev.slice(0, 9),
       ]);
+      this.load();
     });
+    this.auditSub = this.ws.auditUpdates$.subscribe(() => this.load());
   }
 
   load(event?: any) {
@@ -74,5 +77,8 @@ export class DashboardPage implements OnInit, OnDestroy {
     return r === 'SECURE' ? 'success' : r === 'UNSAFE' ? 'danger' : 'medium';
   }
 
-  ngOnDestroy() { this.wsSub?.unsubscribe(); }
+  ngOnDestroy() {
+    this.wsSub?.unsubscribe();
+    this.auditSub?.unsubscribe();
+  }
 }
